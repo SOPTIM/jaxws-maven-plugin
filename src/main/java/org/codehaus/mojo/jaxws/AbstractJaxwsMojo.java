@@ -439,9 +439,14 @@ abstract class AbstractJaxwsMojo
                 }
             }
             InvokerCP classpath = getInvokerCP();
-            cmd.createArg().setValue( "-Xbootclasspath/p:" + classpath.ecp );
-            cmd.createArg().setValue( "-cp" );
-            cmd.createArg().setValue( classpath.invokerPath );
+            if ( isXbootclasspathSupported() ) {
+                cmd.createArg().setValue( "-Xbootclasspath/p:" + classpath.ecp );
+                cmd.createArg().setValue( "-cp" );
+                cmd.createArg().setValue( classpath.invokerPath );
+            } else {
+                cmd.createArg().setValue( "-cp" );
+                cmd.createArg().setValue( classpath.ecp + File.pathSeparator + classpath.invokerPath );
+            }
             cmd.createArg().setLine( Invoker.class.getCanonicalName() );
             cmd.createArg().setLine( getMain() );
             String extraCp = getExtraClasspath();
@@ -489,6 +494,10 @@ abstract class AbstractJaxwsMojo
         {
             throw new MojoExecutionException( t.getMessage(), t );
         }
+    }
+
+    private boolean isXbootclasspathSupported() {
+        return Double.parseDouble(System.getProperty("java.specification.version")) <= 1.8;
     }
 
     protected void maybeUnsupportedOption( String option, String value, List<String> arguments )
